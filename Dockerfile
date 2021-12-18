@@ -8,11 +8,11 @@ RUN apt-get update && \
 		python3-pip \
 		python3-dev \
 		libssl-dev \
-		build-essential
+		build-essential \
+		libpq-dev
 		
 RUN pip install \
-	--upgrade pip \
-	pysqlite3 \
+	psycopg2 \
 	requests \
 	discord --no-binary\
 	tweepy \
