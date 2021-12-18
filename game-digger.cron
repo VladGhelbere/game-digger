@@ -1,0 +1,1 @@
+*/2 * * * * root /scripts/script.py >> /var/log/game-digger/game-digger.log 2>&1
