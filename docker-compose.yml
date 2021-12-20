@@ -3,6 +3,8 @@ services:
   game-digger:
     build: .
     container_name: game-digger
+    env_file:
+      - common.env
     restart: always
   postgres:
     container_name: postgres
@@ -12,5 +14,5 @@ services:
     ports:
       - 5432:5432
     env_file:
-      - postgres.env
+      - common.env
     restart: always
