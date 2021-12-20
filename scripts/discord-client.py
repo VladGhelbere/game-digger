@@ -110,10 +110,12 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == client.user or message.content[0] != BOT_SYMBOL:
         return
 
     logging.info(message)
+    message_text = None
+    message_extras = None
     author = message.author.mention
     msg = message.content
 
@@ -140,17 +142,19 @@ async def on_message(message):
 
     elif msg.startswith(BOT_SYMBOL+'rate'):
         req_spec = msg.split(' ',2)
-        rating = req_spec[1]
+        rating = int(req_spec[1])
         game_name = req_spec[2]
-        if rate_game(author, rating, game_name):
+        if isinstance(rating,str) or rating > 5:
+            message_text = "Only ratings between 0 & 5 accepted"
+        elif rate_game(author, rating, game_name):
             message_text = f"{author} rated {game_name} a {rating}/5"
 
     elif msg.startswith(BOT_SYMBOL+'rec'):
         message_text, message_extras = fetch_rec_game(author)
 
-    if message_text:
+    if message_text != None:
         await message.channel.send(message_text)
-    if message_extras:
+    if message_extras != None:
         await message.channel.send(message_extras)
 
 
