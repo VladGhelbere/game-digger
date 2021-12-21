@@ -89,8 +89,13 @@ def rate_game(requester, rating, game_name):
     # fetch game
     game_obj = rawg_wrapper.rawg_game(RAWG_API.getGame(game_name))
     # register rating
-    PG_WRAPPER.query(f"""INSERT INTO gd.ratings (user_idx, game_id, game_name, genre, rating) VALUES ({user_idx},{game_obj.id},"{game_obj.name}",'{', '.join(game_obj.genres)}',{rating});""")
-    return True
+    try:
+        PG_WRAPPER.query(f"""INSERT INTO gd.ratings (user_idx, game_id, game_name, genre, rating) VALUES ({user_idx},{game_obj.id},"{game_obj.name}",'{', '.join(game_obj.genres)}',{rating});""")
+        return f"{requester} rated '{game_obj.name}' a {rating}/5"
+    # in case duplicate rate
+    except:
+        rating = PG_WRAPPER.get_rows(f"SELECT rating FROM gd.ratings WHERE user_idx = {user_idx} AND game_id LIKE '{game_obj.id}';")[0][0]
+        return f"{requester}, you already rated '{game_obj.name}' a {rating}/5"
 
 def fetch_rec_game(requester):
     try:
@@ -145,8 +150,12 @@ async def on_message(message):
         game_name = req_spec[2]
         if isinstance(rating,str) or rating > 5:
             message_text = "Only ratings between 0 & 5 accepted"
-        elif rate_game(author, rating, game_name):
-            message_text = f"{author} rated {game_name} a {rating}/5"
+        else:
+            rate_resp = rate_game(author, rating, game_name)
+            if rate_resp:
+                message_text = rate_resp
+            else:
+                message_text = f"Failed to rate '{game_name}'"
 
     elif msg.startswith(BOT_SYMBOL+'rec'):
         message_text = fetch_rec_game(author)
