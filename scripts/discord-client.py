@@ -28,7 +28,7 @@ def get_genre_game(game_genre, requester_name):
     try:
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame(genres=game_genre))
         game_as_req = get_req_game_str(game_obj, requester_name)
-        return game_as_req, game_obj.screenshot_links[0]
+        return game_as_req
     except Exception as e:
         exc = 'Could not retrieve game by genre'
         logging.exception(exc)
@@ -38,7 +38,7 @@ def get_underground_game(requester_name):
     try:
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame(order='rating'))
         game_as_req = get_req_game_str(game_obj, requester_name)
-        return game_as_req, game_obj.screenshot_links[0]
+        return game_as_req
     except Exception as e:
         exc = 'Could not retrieve underground game'
         logging.exception(exc)
@@ -48,9 +48,9 @@ def fetch_random_game(requester):
     try:
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame())
         game_as_req = get_random_game_str(game_obj, requester)
-        return game_as_req, game_obj.screenshot_links[0]
+        return game_as_req
     except Exception as e:
-        exc = 'Could not retrieve recommended game'
+        exc = 'Could not retrieve random game'
         logging.exception(exc)
         return False
 
@@ -58,7 +58,7 @@ def fetch_game_rec(game_name, requester, mention):
     try:
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getGame(game_name))
         game_as_req = get_req_game_str(game_obj, requester, mention)
-        return game_as_req, game_obj.screenshot_links[0]
+        return game_as_req
     except Exception as e:
         exc = 'Could not retrieve user recommended game'
         logging.exception(exc)
@@ -68,9 +68,9 @@ def fetch_req_game(game_name, requester_name):
     try:
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getGame(game_name))
         game_as_req = get_req_game_str(game_obj, requester_name)
-        return game_as_req, game_obj.screenshot_links[0]
+        return game_as_req
     except Exception as e:
-        exc = 'Could not retrieve random game'
+        exc = 'Could not retrieve requested game'
         logging.exception(exc)
         return False
 
@@ -98,9 +98,9 @@ def fetch_rec_game(requester):
         fav_genres = {i:genres.count(i) for i in genres}
         fav_genre = max(fav_genres, key=fav_genres.get)
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame(genres=fav_genre))
-        return get_rec_game_str(game_obj, requester), game_obj.screenshot_links[0]
+        return get_rec_game_str(game_obj, requester)
     except:
-        return f"I don't have enough information to make a recommendation, {requester} !", "Rate some titles !"
+        return f"I don't have enough information to make a recommendation, {requester} !\nRate some titles !"
 
 
 @client.event
@@ -115,7 +115,6 @@ async def on_message(message):
 
     logging.info(message)
     message_text = None
-    message_extras = None
     author = message.author.mention
     msg = message.content
 
@@ -123,22 +122,22 @@ async def on_message(message):
         await message.channel.send(INSTRUCTIONS)
 
     elif msg.startswith(BOT_SYMBOL+'game'):
-        message_text, message_extras = fetch_random_game(author)
+        message_text = fetch_random_game(author)
 
     elif msg.startswith(BOT_SYMBOL+'req'):
         req_spec = msg.split(' ', 1)[1]
 
         if req_spec == 'underground':
-            message_text, message_extras = get_underground_game(author)
+            message_text = get_underground_game(author)
         elif req_spec.startswith('genre'):
             genre = req_spec.split(' ', 1)[1]
-            message_text, message_extras = get_genre_game(genre, author)
+            message_text = get_genre_game(genre, author)
         elif '<@!' in req_spec[0:3]:
             user_id = req_spec.split(' ')[0]
             game_name = req_spec.split(' ')[1]
-            message_text, message_extras = fetch_game_rec(game_name, author, user_id)
+            message_text = fetch_game_rec(game_name, author, user_id)
         else:
-            message_text, message_extras = fetch_req_game(req_spec, author)
+            message_text = fetch_req_game(req_spec, author)
 
     elif msg.startswith(BOT_SYMBOL+'rate'):
         req_spec = msg.split(' ',2)
@@ -150,12 +149,10 @@ async def on_message(message):
             message_text = f"{author} rated {game_name} a {rating}/5"
 
     elif msg.startswith(BOT_SYMBOL+'rec'):
-        message_text, message_extras = fetch_rec_game(author)
+        message_text = fetch_rec_game(author)
 
     if message_text != None:
         await message.channel.send(message_text)
-    if message_extras != None:
-        await message.channel.send(message_extras)
 
 
 client.run(os.getenv('DISCORD_BOT_TOKEN'))
