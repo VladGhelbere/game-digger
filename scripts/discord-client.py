@@ -89,7 +89,7 @@ def rate_game(requester, rating, game_name):
     # fetch game
     game_obj = rawg_wrapper.rawg_game(RAWG_API.getGame(game_name))
     # register rating
-    PG_WRAPPER.query(f"INSERT INTO gd.ratings (user_idx, game_id, game_name, genre, rating) VALUES ({user_idx},{game_obj.id},'{game_obj.name}','{', '.join(game_obj.genres)}',{rating});")
+    PG_WRAPPER.query(f"""INSERT INTO gd.ratings (user_idx, game_id, game_name, genre, rating) VALUES ({user_idx},{game_obj.id},"{game_obj.name}",'{', '.join(game_obj.genres)}',{rating});""")
     return True
 
 def fetch_rec_game(requester):
