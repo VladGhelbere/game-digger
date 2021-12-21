@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import discord, os, shutil, logging
+import discord, os, shutil, logging, random
 import lib.rawg_wrapper as rawg_wrapper
 import lib.postgres_wrapper as postgres_wrapper
 from utils import *
@@ -101,7 +101,7 @@ def fetch_rec_game(requester):
     try:
         genres = (PG_WRAPPER.get_rows(f"SELECT genres FROM gd.user_genre_ratings WHERE username LIKE '{requester}';")[0][0]).replace(" ", "").split(',')
         fav_genres = {i:genres.count(i) for i in genres}
-        fav_genre = max(fav_genres, key=fav_genres.get)
+        fav_genre = random.choice(sorted(fav_genres, key=fav_genres.get, reverse=True)[:2])
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame(genres=fav_genre))
         return get_rec_game_str(game_obj, requester)
     except:
