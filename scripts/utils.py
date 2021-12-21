@@ -1,9 +1,9 @@
 def get_random_game_str(game_obj, requester):
     c_string = f"Hey {requester}, here's a random game: '{game_obj.name}'\n"
 
-    if game_obj.genres != None:
+    if game_obj.genres != []:
         c_string += f"Genres: {', '.join(game_obj.genres)}\n"
-    if game_obj.platforms != None:
+    if game_obj.platforms != []:
         c_string += f"Platforms: {', '.join(game_obj.platforms)}\n"
     if game_obj.release_date != None:
         c_string += f"Released date: {game_obj.release_date}\n"
@@ -15,9 +15,9 @@ def get_random_game_str(game_obj, requester):
 def get_rec_game_str(game_obj, requester):
     c_string = f"My recommendation for {requester} is: '{game_obj.name}'\n"
 
-    if game_obj.genres != None:
+    if game_obj.genres != []:
         c_string += f"Genres: {', '.join(game_obj.genres)}\n"
-    if game_obj.platforms != None:
+    if game_obj.platforms != []:
         c_string += f"Platforms: {', '.join(game_obj.platforms)}\n"
     if game_obj.release_date != None:
         c_string += f"Released date: {game_obj.release_date}\n"
@@ -33,10 +33,10 @@ def get_req_game_str(game_obj, requester, mention=None):
     else:
         c_string += f"Requested by {requester}\n"
 
-    if game_obj.genres != None:
+    if game_obj.genres != []:
         c_string += f"Genres: {', '.join(game_obj.genres)}\n"
 
-    if game_obj.platforms != None:
+    if game_obj.platforms != []:
         c_string += f"Platforms: {', '.join(game_obj.platforms)}\n"
 
     if game_obj.release_date != None:
@@ -48,7 +48,7 @@ def get_req_game_str(game_obj, requester, mention=None):
     if game_obj.metacritic != None:
         c_string += f"Metacritic: {game_obj.metacritic}/100\n"
 
-    if game_obj.stores != None:
+    if game_obj.stores != []:
         c_string += f"Stores: {', '.join(game_obj.stores)}\n"
 
     if game_obj.url != None:
