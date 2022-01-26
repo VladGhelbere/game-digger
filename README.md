@@ -7,7 +7,6 @@ For now, only discord support has been implemented !
 Available Commands:
   - $help - get list of commands
   - $game - recommends random game
-  - $req underground - request an unknown game
   - $req (game) - request more information about a game
   - $req genre (genre) - request game from a genre
   - $req (@user) (game) - recommend a user a game
