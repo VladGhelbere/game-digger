@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import discord, os, shutil, logging, random
+import discord, os, logging, random, re
 import lib.rawg_wrapper as rawg_wrapper
 import lib.postgres_wrapper as postgres_wrapper
 from utils import *
@@ -15,7 +15,6 @@ BOT_SYMBOL = os.getenv("BOT_SYMBOL")
 INSTRUCTIONS = f'''
     Available Commands:
         {BOT_SYMBOL}game - recommends random game
-        {BOT_SYMBOL}req underground - request an unknown game
         {BOT_SYMBOL}req (game) - request more information about a game
         {BOT_SYMBOL}req genre (genre) - request game from a genre
         {BOT_SYMBOL}req (@user) (game) - recommend a user a game
@@ -24,36 +23,29 @@ INSTRUCTIONS = f'''
     * Brackets content needs to be replaced by you !
 '''
 
-def get_genre_game(game_genre, requester_name):
+# DB
+def get_genre_game(game_genre, requester):
     try:
-        game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame(genres=game_genre))
-        game_as_req = get_req_game_str(game_obj, requester_name)
-        return game_as_req
+        game_info = PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released, rating FROM gd.games g WHERE g.id = (SELECT vg.id FROM gd.v_games vg WHERE vg.genres LIKE '%{game_genre.lower()}%' ORDER BY RANDOM() LIMIT 1);")[0]
+        game_obj = Game(game_info[0],game_info[1],game_info[2],game_info[3],game_info[4],game_info[5])
+        response = game_obj.get_game_as_rec(requester)
     except Exception as e:
-        exc = 'Could not retrieve game by genre'
-        logging.exception(exc)
-        return False
+        genres = (PG_WRAPPER.get_rows("SELECT STRING_AGG(DISTINCT genres,', ') FROM gd.games WHERE genres NOT LIKE '%,%' AND genres NOT LIKE ''")[0][0])
+        response = f"""Could not retrieve game by genre !\nExisting genres: {genres}"""
+    return response
 
-def get_underground_game(requester_name):
-    try:
-        game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame(order='rating'))
-        game_as_req = get_req_game_str(game_obj, requester_name)
-        return game_as_req
-    except Exception as e:
-        exc = 'Could not retrieve underground game'
-        logging.exception(exc)
-        return False
-
+# DB
 def fetch_random_game(requester):
     try:
-        game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame())
-        game_as_req = get_random_game_str(game_obj, requester)
-        return game_as_req
+        game_info = PG_WRAPPER.get_rows("SELECT name, slug, platforms, genres, stores, released, rating  FROM gd.games  ORDER BY RANDOM() LIMIT 1")[0]
+        game_obj = Game(game_info[0],game_info[1],game_info[2],game_info[3],game_info[4],game_info[5])
+        response = game_obj.get_game_as_rec(requester)
     except Exception as e:
-        exc = 'Could not retrieve random game'
-        logging.exception(exc)
-        return False
+        response = 'Could not retrieve random game'
+        logging.exception(e)
+    return response
 
+# RAWG API
 def fetch_game_rec(game_name, requester, mention):
     try:
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getGame(game_name))
@@ -64,16 +56,18 @@ def fetch_game_rec(game_name, requester, mention):
         logging.exception(exc)
         return False
 
-def fetch_req_game(game_name, requester_name):
+# RAWG API
+def fetch_req_game(game_name, requester):
     try:
         game_obj = rawg_wrapper.rawg_game(RAWG_API.getGame(game_name))
-        game_as_req = get_req_game_str(game_obj, requester_name)
+        game_as_req = get_req_game_str(game_obj, requester)
         return game_as_req
     except Exception as e:
         exc = 'Could not retrieve requested game'
         logging.exception(exc)
         return False
 
+# DB
 def check_user_registered(requester):
     try:
         # check if user in DB
@@ -84,28 +78,41 @@ def check_user_registered(requester):
         user_idx = PG_WRAPPER.get_rows(f"SELECT idx FROM gd.users WHERE username LIKE '{requester}';")[0][0]
     return user_idx
 
+# RAWG API
 def rate_game(requester, rating, game_name):
     user_idx = check_user_registered(requester)
     # fetch game
     game_obj = rawg_wrapper.rawg_game(RAWG_API.getGame(game_name))
     # register rating
     try:
-        PG_WRAPPER.query(f"""INSERT INTO gd.ratings (user_idx, game_id, game_name, genre, rating) VALUES ({user_idx},{game_obj.id},'{game_obj.name.replace("'","")}','{', '.join(game_obj.genres)}',{rating});""")
+        PG_WRAPPER.query(f"""INSERT INTO gd.ratings (user_idx, game_id, rating) VALUES ({user_idx},{game_obj.id},{rating});""")
         return f"{requester} rated '{game_obj.name}' a {rating}/5"
     # in case duplicate rate
     except:
-        rating = PG_WRAPPER.get_rows(f"SELECT rating FROM gd.ratings WHERE user_idx = {user_idx} AND game_id LIKE '{game_obj.id}';")[0][0]
+        rating = PG_WRAPPER.get_rows(f"SELECT rating FROM gd.ratings WHERE user_idx = {user_idx} AND game_id = {game_obj.id};")[0][0]
         return f"{requester}, you already rated '{game_obj.name}' a {rating}/5"
 
+# DB
 def fetch_rec_game(requester):
     try:
-        genres = (PG_WRAPPER.get_rows(f"SELECT genres FROM gd.user_genre_ratings WHERE username LIKE '{requester}';")[0][0]).replace(" ", "").split(',')
+        fav_games_data = (PG_WRAPPER.get_rows(f"SELECT genres, released, platforms FROM gd.v_user_preferences WHERE username LIKE '{requester}';")[0])
+        genres = fav_games_data[0].split(',')
         fav_genres = {i:genres.count(i) for i in genres}
-        fav_genre = random.choice(sorted(fav_genres, key=fav_genres.get, reverse=True)[:2])
-        game_obj = rawg_wrapper.rawg_game(RAWG_API.getRandomGame(genres=fav_genre))
-        return get_rec_game_str(game_obj, requester)
+        fav_genres = sorted(fav_genres, key=fav_genres.get, reverse=True)[:2]
+
+        try:
+            fav_year = fav_games_data[1].split(',')[0]
+        except:
+            fav_year = fav_games_data[1][0]
+
+        # fetch game
+        game_info = PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released FROM gd.games g WHERE (SELECT id FROM gd.v_games vg WHERE genres LIKE '%{fav_genres[0]}%{fav_genres[1]}%' AND (INT4(released) BETWEEN {int(fav_year)-5} AND {int(fav_year)+5}) ORDER BY RANDOM() LIMIT 1) = g.id;")[0]
+        game_obj = Game(game_info[0],game_info[1],game_info[2],game_info[3],game_info[4],game_info[5])
+
+        # return game
+        return game_obj.get_game_as_rec(requester)
     except:
-        return f"I don't have enough information to make a recommendation, {requester} !\nRate some titles !"
+        return f"I don't have enough information to make a recommendation, {requester} !\nRate some titles you enjoyed !"
 
 
 @client.event
@@ -165,3 +172,4 @@ async def on_message(message):
 
 
 client.run(os.getenv('DISCORD_BOT_TOKEN'))
+
