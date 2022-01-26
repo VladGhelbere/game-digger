@@ -96,7 +96,7 @@ def rate_game(requester, rating, game_name):
 # DB
 def fetch_rec_game(requester):
     try:
-        fav_games_data = (PG_WRAPPER.get_rows(f"SELECT genres, released, platforms FROM gd.v_user_preferences WHERE username LIKE '{requester}';")[0])
+        fav_games_data = (PG_WRAPPER.get_rows(f"SELECT genres, released FROM gd.v_user_preferences WHERE username LIKE '{requester}';")[0])
         genres = fav_games_data[0].split(',')
         fav_genres = {i:genres.count(i) for i in genres}
         fav_genres = sorted(fav_genres, key=fav_genres.get, reverse=True)[:2]
@@ -107,7 +107,7 @@ def fetch_rec_game(requester):
             fav_year = fav_games_data[1][0]
 
         # fetch game
-        game_info = PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released FROM gd.games g WHERE (SELECT id FROM gd.v_games vg WHERE genres LIKE '%{fav_genres[0]}%{fav_genres[1]}%' AND (INT4(released) BETWEEN {int(fav_year)-5} AND {int(fav_year)+5}) ORDER BY RANDOM() LIMIT 1) = g.id;")[0]
+        game_info = PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released FROM gd.games g WHERE (SELECT id FROM gd.v_games vg WHERE genres LIKE '%{fav_genres[0]}%{fav_genres[1]}%' AND (INT4(released) BETWEEN {int(fav_year)-5} AND {int(fav_year)+5}) AND FLOAT4(rating) > 4 ORDER BY RANDOM() LIMIT 1) = g.id;")[0]
         game_obj = Game(game_info[0],game_info[1],game_info[2],game_info[3],game_info[4],game_info[5])
 
         # return game
