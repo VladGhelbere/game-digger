@@ -12,6 +12,7 @@ Available Commands:
   - $req (@user) (game) - recommend a user a game
   - $rec - request a game recommendation (based on your ratings)
   - $rate (rating) (game) - rate a game out of 5 
+  - $ResetRatings! - resets all games rated so far
 
 Brackets content needs to be replaced by you !
 ---- ----

@@ -20,6 +20,7 @@ INSTRUCTIONS = f'''
         {BOT_SYMBOL}req (@user) (game) - recommend a user a game
         {BOT_SYMBOL}rec - request a game recommendation (based on your ratings)
         {BOT_SYMBOL}rate (rating) (game) - rate a game out of 5
+        {BOT_SYMBOL}ResetRatings! - resets all games rated so far
     * Brackets content needs to be replaced by you !
 '''
 
@@ -166,6 +167,13 @@ async def on_message(message):
 
     elif msg.startswith(BOT_SYMBOL+'rec'):
         message_text = fetch_rec_game(author)
+
+    elif msg.startswith(BOT_SYMBOL+'ResetRatings!'):
+        try:
+            PG_WRAPPER.query(f"DELETE FROM gd.ratings rs WHERE rs.idx IN (SELECT r.idx FROM gd.users u INNER JOIN gd.ratings r ON u.idx = r.user_idx WHERE u.username = '{author}');")
+            message_text = f"Deleted all user rating data for {author} !"
+        except:
+            message_text = f"There is no user rating data to delete for {author} !"
 
     if message_text != None:
         await message.channel.send(message_text)
