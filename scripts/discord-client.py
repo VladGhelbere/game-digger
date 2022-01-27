@@ -107,7 +107,7 @@ def fetch_rec_game(requester):
             fav_year = fav_games_data[1][0]
 
         # fetch game
-        game_info = PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released FROM gd.games g WHERE (SELECT id FROM gd.v_games vg WHERE genres LIKE '%{fav_genres[0]}%{fav_genres[1]}%' AND (INT4(released) BETWEEN {int(fav_year)-5} AND {int(fav_year)+5}) AND FLOAT4(rating) > 4 ORDER BY RANDOM() LIMIT 1) = g.id;")[0]
+        game_info = PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released FROM gd.games g WHERE (SELECT id FROM gd.v_games vg WHERE genres LIKE '%{fav_genres[0]}%' AND genres LIKE '%{fav_genres[1]}%' AND (INT4(released) BETWEEN {int(fav_year)-5} AND {int(fav_year)+5}) AND FLOAT4(rating) > 4 ORDER BY RANDOM() LIMIT 1) = g.id;")[0]
         game_obj = Game(game_info[0],game_info[1],game_info[2],game_info[3],game_info[4],game_info[5])
 
         # return game
