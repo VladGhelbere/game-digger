@@ -20,6 +20,8 @@ INSTRUCTIONS = f'''
         {BOT_SYMBOL}req (@user) (game) - recommend a user a game
         {BOT_SYMBOL}rec - request a game recommendation (based on your ratings)
         {BOT_SYMBOL}rate (rating) (game) - rate a game out of 5
+        {BOT_SYMBOL}list - list games rated so far
+        {BOT_SYMBOL}unrate (game-name from $list) - delete rating for a game
         {BOT_SYMBOL}ResetRatings! - resets all games rated so far
     * Brackets content needs to be replaced by you !
 '''
@@ -140,9 +142,7 @@ async def on_message(message):
     elif msg.startswith(BOT_SYMBOL+'req'):
         req_spec = msg.split(' ', 1)[1]
 
-        if req_spec == 'underground':
-            message_text = get_underground_game(author)
-        elif req_spec.startswith('genre'):
+        if req_spec.startswith('genre'):
             genre = req_spec.split(' ', 1)[1]
             message_text = get_genre_game(genre, author)
         elif '<@!' in req_spec[0:3]:
@@ -167,6 +167,21 @@ async def on_message(message):
 
     elif msg.startswith(BOT_SYMBOL+'rec'):
         message_text = fetch_rec_game(author)
+
+    elif msg.startswith(BOT_SYMBOL+'list'):
+        games_ratings_list = PG_WRAPPER.get_rows(f"SELECT r.rating, g.name FROM gd.ratings r, gd.games g, gd.users u WHERE r.user_idx = u.idx AND r.game_id = g.id AND username = '{author}' ORDER BY r.rating DESC;")
+        games_list = ''
+        for game in games_ratings_list:
+            games_list += f"     {game[0]}     |     {game[1]}\n"
+        message_text = f"Your ratings list so far: \nRating     Game\n{games_list}*To unrate, type {BOT_SYMBOL}unrate (copy-paste game name from list)\n*To clear list, type {BOT_SYMBOL}ResetRatings!"
+
+    elif msg.startswith(BOT_SYMBOL+'unrate'):
+        req_spec = msg.split(' ', 1)[1]
+        try:
+            PG_WRAPPER.query(f"DELETE FROM gd.ratings WHERE game_id IN (SELECT g.id FROM gd.ratings r, gd.games g, gd.users u WHERE r.user_idx = u.idx AND r.game_id = g.id AND u.username = '{author}' AND g.name = '{req_spec}');")
+            message_text = f"Deleted user rating for {author} - {req_spec} !"
+        except:
+            message_text = f"There is no user rating to delete for {author} - {req_spec} !"
 
     elif msg.startswith(BOT_SYMBOL+'ResetRatings!'):
         try:
