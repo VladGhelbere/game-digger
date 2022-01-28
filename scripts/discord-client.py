@@ -115,7 +115,7 @@ def fetch_rec_game(requester):
         # return game
         response = game_obj.get_game_as_rec(requester)
     except:
-        game_info = PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released, rating FROM gd.games WHERE rating > 4.5 ORDER BY RANDOM() LIMIT 1")
+        game_info = PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released, rating FROM gd.games WHERE rating > 4.5 ORDER BY RANDOM() LIMIT 1")[0]
         game_obj = Game(game_info[0],game_info[1],game_info[2],game_info[3],game_info[4],game_info[5])
         response = game_obj.get_game_as_rec(requester)
     return response
