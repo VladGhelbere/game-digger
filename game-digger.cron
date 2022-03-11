@@ -1,1 +1,2 @@
 @reboot root /scripts/discord-client.py >> /var/log/game-digger/game-digger.log 2>&1
+0 */8 * * * root /scripts/twitter-client.py >> /var/log/game-digger/game-digger.log 2>&1

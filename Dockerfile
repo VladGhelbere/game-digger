@@ -7,6 +7,7 @@ RUN apt-get update && \
 		python3 \
 		python3-pip \
 		python3-dev \
+		python3-tweepy \
 		libssl-dev \
 		build-essential \
 		libpq-dev
@@ -14,9 +15,9 @@ RUN apt-get update && \
 RUN pip install \
 	psycopg2 \
 	requests \
-	discord --no-binary\
-	tweepy \
-	jsonmerge
+	jsonmerge \
+	discord --no-binary \
+	tweepy
 
 RUN mkdir /var/log/game-digger
 

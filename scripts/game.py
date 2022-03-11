@@ -15,6 +15,13 @@ class Game():
         c_string += f"Genres: {self.genres}\nPlatforms: {self.platforms}\nStores: {self.stores}\nReleased date: {self.released}\nMore info: {self.url}"
         return c_string
 
+    def get_game_as_tweet(self):
+        trc_genres = ','.join(self.genres.split(',')[0:2])
+        trc_stores = ','.join(self.stores.split(',')[0:2])
+        trc_released = self.released.split('-')[0]
+        c_string = f"I found a game called '{self.name}'. It's a: {trc_genres} game released on: {trc_released} and available on: {trc_stores}. Find more info here: {self.url}"
+        return c_string
+
 class RawgGame():
     def __init__(self, game_json):
         self.id = game_json['id']
