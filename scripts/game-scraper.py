@@ -19,7 +19,7 @@ while True:
                 print(game_obj.name)
                 try:
                         # TO:DO - add check to see if game already exists, after cloning the DB
-                        PG_WRAPPER.query(f"""INSERT INTO gd.games (id, name, slug, platforms, genres, stores, released, rating) VALUES ({game_obj.id},'{game_obj.name.replace("'"," ")}','{game_obj.slug}','{','.game_obj.platforms}','{','.game_obj.genres}','{','.game_obj.stores}','{game_obj.release_date}',{game_obj.rating})""")
+                        PG_WRAPPER.query(f"""INSERT INTO gd.games (id, name, slug, platforms, genres, stores, released, rating) VALUES ({game_obj.id},'{game_obj.name.replace("'"," ")}','{game_obj.slug}','{game_obj.platforms}','{game_obj.genres}','{game_obj.stores}','{game_obj.release_date}',{game_obj.rating})""")
                 except:
                         continue
         result = requests.get(next_page).json()
