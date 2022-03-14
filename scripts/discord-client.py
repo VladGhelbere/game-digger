@@ -84,6 +84,6 @@ async def on_message(message):
 
     if message_text != None:
         await message.channel.send(message_text)
-
+        recommender.register_request(author, msg)
 
 client.run(os.getenv("DISCORD_BOT_TOKEN"))

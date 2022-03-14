@@ -16,3 +16,12 @@ services:
     env_file:
       - common.env
     restart: always
+  grafana:
+    container_name: grafana
+    image: grafana/grafana-oss:latest
+    volumes:
+      - /var/lib/grafana-data:/var/lib/grafana/data
+    ports:
+      - 5050:3000
+    user: '104'
+

@@ -152,3 +152,8 @@ class GameRecommender():
             game_obj = Game(game_info[0],game_info[1],game_info[2],game_info[3],game_info[4],game_info[5])
             response = game_obj.get_game_as_rec(requester)
         return response
+
+    # Uses: DB
+    # Responds to: ALL
+    def register_request(self, requester, request):
+        self.PG_WRAPPER.query(f"INSERT INTO gd.requests (user_idx, request) VALUES ((SELECT idx FROM gd.users WHERE username LIKE '{requester}'),'{request}');")
