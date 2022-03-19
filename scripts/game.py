@@ -32,6 +32,7 @@ class RawgGame():
         self.genres = ', '.join([gr['name'] for gr in game_json['genres']])
         self.stores = ', '.join([st['store']['name'] for st in game_json['stores']])
         self.released = game_json['released']
+        self.rating = game_json['rating']
 
     def get_req_game_str(self, requester, mention=None):
         c_string = f"Game: '{self.name}'\n"
