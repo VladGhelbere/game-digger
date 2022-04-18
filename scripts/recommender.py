@@ -129,15 +129,19 @@ class GameRecommender():
             fav_games_data = (self.PG_WRAPPER.get_rows(f"SELECT genres, released FROM gd.v_user_preferences WHERE username LIKE '{requester}';")[0])
             genres = fav_games_data[0].split(',')
             fav_genres = {i:genres.count(i) for i in genres}
-            fav_genres = sorted(fav_genres, key=fav_genres.get, reverse=True)[:2]
+            fav_genres = sorted(fav_genres, key=fav_genres.get, reverse=True)[:3]
 
             if len(fav_genres) == 1:
                 fav_genres_str = f"genres LIKE '%{fav_genres[0]}%'"
             else:
-                fav_genres_str = f"genres LIKE '%{fav_genres[0]}%' AND genres LIKE '%{fav_genres[1]}%'"
+                fav_genres_str = f"genres LIKE '%{fav_genres[0]}%'"
+                for i in range(1,len(fav_genres)):
+                    fav_genres_str += f"AND genres LIKE '%{fav_genres[i]}%'"
 
             try:
-                fav_year = fav_games_data[1].split(',')[0]
+                years = fav_games_data[1].split(',')
+                fav_years = {i:years.count(i) for i in years}
+                fav_year = sorted(fav_years, key=fav_years.get, reverse=True)[0]
             except:
                 fav_year = fav_games_data[1][0]
 
