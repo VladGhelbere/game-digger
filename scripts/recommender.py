@@ -146,7 +146,7 @@ class GameRecommender():
                 fav_year = fav_games_data[1][0]
 
             # fetch game
-            game_info = self.PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released FROM gd.games g WHERE (SELECT id FROM gd.v_games vg WHERE {fav_genres_str} AND (vg.released LIKE 'None' OR INT4(vg.released) BETWEEN {int(fav_year)-5} AND {int(fav_year)+5}) AND FLOAT4(rating) > 2.5 ORDER BY RANDOM() LIMIT 1) = g.id;")[0]
+            game_info = self.PG_WRAPPER.get_rows(f"SELECT name, slug, platforms, genres, stores, released FROM gd.games g WHERE (SELECT id FROM gd.v_games vg WHERE {fav_genres_str} AND (vg.released LIKE 'None' OR INT4(vg.released) BETWEEN {int(fav_year)-3} AND {int(fav_year)+100}) AND FLOAT4(rating) > 2.5 ORDER BY RANDOM() LIMIT 1) = g.id;")[0]
             game_obj = Game(game_info[0],game_info[1],game_info[2],game_info[3],game_info[4],game_info[5])
 
             # return game
