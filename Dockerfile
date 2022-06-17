@@ -4,7 +4,7 @@ RUN apt-get update && \
 	apt-get install -y --no-install-recommends \
 		cron \
 		nano \
-                micro \
+		micro \
 		python3 \
 		python3-pip \
 		python3-dev \

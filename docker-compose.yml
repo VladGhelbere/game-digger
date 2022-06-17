@@ -3,16 +3,17 @@ services:
   game-digger:
     build: .
     container_name: game-digger
+    image: game-digger:latest
     env_file:
       - common.env
     restart: always
   postgres:
-    container_name: postgres
+    container_name: postgres-gd
     image: postgres:latest
     volumes:
-      - /var/lib/postgres-data:/var/lib/postgresql/data
+      - /var/lib/postgres-data-gd:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 5433:5432
     env_file:
       - common.env
     restart: always
